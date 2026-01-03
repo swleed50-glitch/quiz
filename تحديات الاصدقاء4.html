@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مسابقة الفرق - إعداد الأستاذ ناصر السهلي</title>
+    <style>
+        body {
+            font-family: "Tahoma", sans-serif;
+            background: #d9f6d9; /* أخضر فاتح */
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 10px auto 30px;
+            background: #ffffff;
+            padding: 15px 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            margin: 5px 0;
+            font-size: 22px;
+            color: #1f2933;
+        }
+        h2 {
+            text-align: center;
+            margin: 5px 0 15px;
+            font-size: 20px;
+            color: #1f3c88;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .team-card {
+            flex: 1;
+            min-width: 200px;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-sizing: border-box;
+        }
+        .team-blue {
+            background: #2563eb;
+        }
+        .team-green {
+            background: #16a34a;
+        }
+        .team-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .team-score {
+            font-size: 16px;
+        }
+        .current-turn {
+            border: 3px solid #facc15;
+        }
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .controls button {
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            background: #1f3c88;
+            color: #fff;
+        }
+        .controls button:hover {
+            background: #162a5c;
+        }
+        .controls button.secondary {
+            background: #64748b;
+        }
+        .controls button.secondary:hover {
+            background: #475569;
+        }
+        .controls button.success {
+            background: #15803d;
+        }
+        .controls button.success:hover {
+            background: #166534;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 4px;
+            margin-top: 15px;
+        }
+        .cell {
+            background: #e5e7eb;
+            border-radius: 4px;
+            text-align: center;
+            padding: 10px 2px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        .cell:hover {
+            background: #d1d5db;
+        }
+        .cell.disabled {
+            cursor: default;
+            opacity: 0.9;
+        }
+        .cell.team-blue {
+            background: #2563eb;
+            color: #fff;
+        }
+        .cell.team-green {
+            background: #16a34a;
+            color: #fff;
+        }
+        .cell span.mark {
+            display: block;
+            font-size: 16px;
+        }
+
+        .winner-banner {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #b91c1c;
+        }
+        .footer {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        .disabled-all .cell {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* نافذة السؤال في وسط المسابقة */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .overlay.visible {
+            display: flex;
+        }
+        .question-modal {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px 24px;
+            max-width: 700px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+        .question-modal-title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #111827;
+            text-align: center;
+        }
+        .question-modal-text {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        .question-modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-btn {
+            text-align: right;
+            padding: 10px 12px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #e5e7eb;
+            cursor: pointer;
+        }
+        .option-btn.correct {
+            background: #16a34a;
+            color: #ffffff;
+            border-color: #15803d;
+        }
+        .option-btn.wrong {
+            background: #dc2626;
+            color: #ffffff;
+            border-color: #b91c1c;
+        }
+        .option-btn:disabled {
+            cursor: default;
+        }
+        .modal-feedback {
+            margin-top: 8px;
+            font-size: 16px;
+            text-align: center;
+            min-height: 20px;
+        }
+        .modal-feedback.correct {
+            color: #16a34a;
+        }
+        .modal-feedback.wrong {
+            color: #dc2626;
+        }
+        .modal-footer-info {
+            margin-top: 6px;
+            font-size: 13px;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <h1>إعداد الأستاذ: <strong>ناصر السهلي</strong></h1>
+    <h2>( تحدي بينك وبين صديقك )</h2>
+
+    <div class="top-bar">
+        <div id="teamA-card" class="team-card team-blue current-turn">
+            <div class="team-title">الفريق الأزرق</div>
+            <div class="team-score">النقاط: <span id="teamA-score">0</span></div>
+        </div>
+        <div class="controls">
+            <button id="shuffle-btn">إعادة توزيع الأسئلة</button>
+            <button id="save-btn" class="secondary">إيقاف المسابقة وحفظها</button>
+            <button id="resume-btn" class="success">استكمال المسابقة المحفوظة</button>
+        </div>
+        <div id="teamB-card" class="team-card team-green">
+            <div class="team-title">الفريق الأخضر</div>
+            <div class="team-score">النقاط: <span id="teamB-score">0</span></div>
+        </div>
+    </div>
+
+    <div id="winner-banner" class="winner-banner"></div>
+
+    <div id="grid" class="grid"></div>
+
+    <div class="footer">
+        إعداد وتنفيذ: الأستاذ ناصر السهلي
+    </div>
+</div>
+
+<!-- نافذة السؤال في وسط الشاشة -->
+<div id="question-overlay" class="overlay">
+    <div class="question-modal">
+        <div class="question-modal-title">سؤال الفريق الحالي</div>
+        <div id="question-text" class="question-modal-text"></div>
+        <div id="question-options" class="question-modal-options"></div>
+        <div id="modal-feedback" class="modal-feedback"></div>
+        <div class="modal-footer-info">
+            لا توجد شروحات داخل السؤال؛ فقط السؤال و الفقرات.
+        </div>
+    </div>
+</div>
+
+<script>
+    const allQuestions = [
+        // 1 - 60
+        {q: "من هو الجد الذي تنتسب إليه الدولة الأموية؟", A: "أمية بن عبد شمس", B: "امية بن عبد المطلب", correct: "A"},
+        {q: "سبب تسمية الدولة الأموية", A: "نسبة إلى أمية بن عبد المطلب", B: "نسبة إلى أمية بن عبد شمس", correct: "B"},
+        {q: "في أي سنة قامت الدولة الأموية؟", A: "41هـ", B: "132هـ", correct: "A"},
+        {q: "في أي سنة انتهت الدولة الأموية؟", A: "92هـ", B: "132هـ", correct: "B"},
+        {q: "كم عدد خلفاء الدولة الأموية؟", A: "14 خليفة", B: "37 خليفة", correct: "A"},
+        {q: "كم استمرت الدولة الأموية؟", A: "50 سنة", B: "91 سنة", correct: "B"},
+        {q: "من هو أول خلفاء الدولة الأموية؟", A: "معاوية بن أبي سفيان", B: "يزيد بن معاوية", correct: "A"},
+        {q: "من هو آخر خلفاء الدولة الأموية؟", A: "الوليد بن عبد الملك", B: "مروان بن محمد", correct: "B"},
+        {q: "من الذي تنازل عن الخلافة لمعاوية؟", A: "الحسن بن علي", B: "الحسين بن علي", correct: "A"},
+        {q: "ما اسم العام الذي توحدت فيه الأمة واتفقت على خليفة واحد؟", A: "عام الفتح", B: "عام الجماعة", correct: "B"},
+        {q: "كم مدة حكم معاوية؟", A: "19 سنة", B: "40 سنة", correct: "A"},
+        {q: "من أعمال معاوية بن أبي سفيان؟", A: "بناء الجامع الأموي", B: "إنشاء ديوان الخاتم", correct: "B"},
+        {q: "من الذي بنى الجامع الأموي؟", A: "الوليد بن عبد الملك", B: "هشام بن عبد الملك", correct: "A"},
+        {q: "من الذي سك النقود الإسلامية؟", A: "معاوية", B: "عبد الملك بن مروان", correct: "B"},
+        {q: "من الذي بنى مسجد قبة الصخرة؟", A: "عبد الملك بن مروان", B: "الوليد بن عبد الملك", correct: "A"},
+        {q: "من الذي اهتم بتوسعة المسجد النبوي؟", A: "يزيد بن معاوية", B: "الوليد بن عبد الملك", correct: "B"},
+        {q: "من الذي عُرف بالعدل والزهد؟", A: "عمر بن عبد العزيز", B: "يزيد بن معاوية", correct: "A"},
+        {q: "من الذي أمر بتدوين الحديث؟", A: "عبد الملك بن مروان", B: "عمر بن عبد العزيز", correct: "B"},
+        {q: "من القائد الذي فتح الأندلس؟", A: "طارق بن زياد", B: "عقبة بن نافع", correct: "A"},
+        {q: "من القائد الذي فتح بلاد السند؟", A: "قتيبة بن مسلم", B: "محمد بن القاسم الثقفي", correct: "B"},
+        {q: "من القائد الذي فتح ما وراء النهر؟", A: "قتيبة بن مسلم", B: "موسى بن نصير", correct: "A"},
+        {q: "من القائد الذي اسس القيروان؟", A: "عقبة بن نافع", B: "حسان بن النعمان", correct: "A"},
+        {q: "من الذي فتح شمال افريقيا وطرد الروم؟", A: "حسان بن النعمان", B: "عقبة بن نافع", correct: "A"},
+        {q: "في أي سنة وقعت معركة وادي لكة؟", A: "95هـ", B: "92هـ", correct: "B"},
+        {q: "من الذي واجه القوط في وادي لكة؟", A: "طارق بن زياد", B: "محمد بن القاسم", correct: "A"},
+        {q: "في أي سنة وقعت بلاط الشهداء؟", A: "104هـ", B: "114هـ", correct: "B"},
+        {q: "من قائد المسلمين في بلاط الشهداء؟", A: "عبد الرحمن الغافقي", B: "طارق بن زياد", correct: "A"},
+        {q: "ما سبب توقف الفتوحات في أوروبا؟", A: "هزيمة عين جالوت", B: "هزيمة بلاط الشهداء", correct: "B"},
+        {q: "ما عاصمة الدولة الأموية؟", A: "دمشق", B: "بغداد", correct: "A"},
+        {q: "من الذي أعاد الأمن للدولة الاموية؟", A: "عبد الملك بن مروان", B: "يزيد بن عبد الملك", correct: "A"},
+        {q: "من هو الجد الذي تنتسب إليه الدولة العباسية؟", A: "العباس بن عبد المطلب", B: "أبوالعباس السفاح", correct: "A"},
+        {q: "سبب تسمية الدولة العباسية", A: "نسبة إلى العباس بن علي", B: "نسبة إلى العباس بن عبد المطلب", correct: "B"},
+        {q: "من هو مؤسس الدعوة العباسية؟", A: "محمد بن علي بن عبد الله", B: "عبدالله بن العباس", correct: "A"},
+        {q: "في أي سنة قامت الدولة العباسية؟", A: "232هـ", B: "132هـ", correct: "B"},
+        {q: "في أي سنة انتهت الدولة العباسية؟", A: "656هـ", B: "922هـ", correct: "A"},
+        {q: "كم عدد خلفاء الدولة العباسية؟", A: "14 خليفة", B: "37 خليفة", correct: "B"},
+        {q: "كم استمرت الدولة العباسية؟", A: "5قرون", B: "7 قرون", correct: "A"},
+        {q: "من هو أول خلفاء الدولة العباسية؟", A: "أبو العباس السفاح", B: "هارون الرشيد", correct: "A"},
+        {q: "من هو الخليفة الذي بنى بغداد؟", A: "أبو جعفر المنصور", B: "هارون الرشيد", correct: "A"},
+        {q: "في أي سنة حكم المنصور؟", A: "132هـ", B: "136هـ", correct: "B"},
+        {q: "من الذي بنى الرواق العباسي؟", A: "محمد المهدي", B: "هارون الرشيد", correct: "A"},
+        {q: "من الذي شهد عصره ازدهار الحضارة الاسلامية؟", A: "ابوجعفر المنصور", B: "هارون الرشيد", correct: "B"},
+        {q: "ما اسم العصر الذي ازدهرت فيه العلوم والحضارة الاسلامية؟", A: "العصر العباسي", B: "العصر الأموي", correct: "A"},
+        {q: "من أبرز أعمال هارون الرشيد؟", A: "دعم العلم والعلماء", B: "بناء قبة الصخرة", correct: "A"},
+        {q: "من أبرز أعمال المنصور؟", A: "بناء بغداد", B: "بناء الجامع الأموي", correct: "A"},
+        {q: "من أبرز أعمال المهدي؟", A: "سك النقود", B: "بناء الرواق العباسي", correct: "B"},
+        {q: "من الذي اهتم بتدوين الحديث؟", A: "عبد الملك بن مروان", B: "عمر بن عبد العزيز", correct: "B"},
+        {q: "من هو آخر خلفاء العباسيين؟", A: "المستعصم بالله", B: "المعتصم بالله", correct: "A"},
+        {q: "من الذي أسقط الدولة العباسية؟", A: "جنكيزخان", B: "هولاكو", correct: "B"},
+        {q: "في أي سنة سقطت بغداد؟", A: "656هـ", B: "583هـ", correct: "A"},
+        {q: "من هو مؤسس الدولة الأيوبية؟", A: "صلاح الدين الأيوبي", B: "سيف الدين قطز", correct: "A"},
+        {q: "من الذي أسس قوة الأيوبيين؟", A: "عماد الدين زنكي", B: "نور الدين محمود", correct: "A"},
+        {q: "في أي سنة وقعت حطين؟", A: "583هـ", B: "490هـ", correct: "A"},
+        {q: "من الذي قاد المسلمين في حطين؟", A: "صلاح الدين", B: "بيبرس", correct: "A"},
+        {q: "ما نتيجة حطين؟", A: "استعادة القدس", B: "استعادة الرها", correct: "A"},
+        {q: "ما سبب قوة الدولة الأيوبية؟", A: "توحيد مصر والشام", B: "توحيد مصر والعراق", correct: "A"},
+        {q: "من الذي أوقف الزحف المغولي؟", A: "صلاح الدين الايوبي", B: "سيف الدين قطز", correct: "B"},
+        {q: "في أي سنة وقعت عين جالوت؟", A: "583هـ", B: "658هـ", correct: "B"},
+        {q: "من الذي طرد الصليبيين من عكا؟", A: "الظاهر بيبرس", B: "صلاح الدين", correct: "A"},
+        {q: "من هو مؤسس الدولة العثمانية؟", A: "عثمان بن أرطغرل", B: "عثمان بن اروخان", correct: "A"},
+
+        // 61 - 120
+        {q: "من هو والد عثمان مؤسس الدولة العثمانية؟", A: "أرطغرل", B: "أورخان", correct: "A"},
+        {q: "من الذي أسس الجيش الإنكشاري؟", A: "سليمان القانوني", B: "أورخان بن عثمان", correct: "B"},
+        {q: "من الذي فتح القسطنطينية؟", A: "محمد الفاتح", B: "سليم الأول", correct: "A"},
+        {q: "في أي سنة فُتحت القسطنطينية؟", A: "699هـ", B: "857هـ", correct: "B"},
+        {q: "من الذي ضم مصر والشام للدولة العثمانية؟", A: "سليم الأول", B: "عثمان", correct: "A"},
+        {q: "من الذي بلغت الدولة العثمانية أوج قوتها في عهده؟", A: "أورخان", B: "سليمان القانوني", correct: "B"},
+        {q: "في أي سنة وقعت معركة مرج دابق؟", A: "857هـ", B: "922هـ", correct: "B"},
+        {q: "في أي سنة وقعت معركة الريدانية؟", A: "583هـ", B: "923هـ", correct: "B"},
+        {q: "من قادة الحملة الصليبية الثالثة؟", A: "ريتشارد قلب الأسد", B: "لويس قلب الاسد", correct: "A"},
+        {q: "من قادة الحملة الصليبية الثالثة؟", A: "فليب ملك انجلترا", B: "فليب ملك فرنسا", correct: "B"},
+        {q: "من قادة الحملة الصليبية الثالثة؟", A: "فريدريك ملك ألمانيا", B: "لويس التاسع", correct: "A"},
+        {q: "من قاد الحملة الصليبية السابعة؟", A: "ريتشارد", B: "لويس التاسع", correct: "B"},
+        {q: "في أي سنة بدأت الحملة الصليبية الأولى؟", A: "583هـ", B: "490هـ", correct: "B"},
+        {q: "ما سبب الحملة الصليبية الثالثة؟", A: "احتلال بغداد", B: "استعادة القدس", correct: "B"},
+        {q: "من هو مؤسس دولة المغول؟", A: "جنكيز خان", B: "هولاكو", correct: "A"},
+        {q: "من الذي أسقط بغداد؟", A: "جنكيز خان", B: "هولاكو", correct: "B"},
+        {q: "أين تقع كاشغر؟", A: "في أقصى الشرق الإسلامي", B: "في الأندلس", correct: "A"},
+        {q: "ما اسم ملك السند الذي واجهه محمد بن القاسم؟", A: "داهر", B: "جنكيزخان", correct: "A"},
+        {q: "من هم القوط؟", A: "سكان إسبانيا", B: "سكان السند", correct: "A"},
+        {q: "أين تقع الديبل؟", A: "في السند", B: "في الأندلس", correct: "A"},
+        {q: "ما هو الغلاف الجوي؟", A: "طبقة من الغازات تحيط بالأرض", B: "طبقة من الصخور والغازات تحيط بالارض", correct: "A"},
+        {q: "ما النسبة الأكبر من غازات الغلاف الجوي؟", A: "الأكسجين 50%", B: "النيتروجين 78%", correct: "B"},
+        {q: "ما نسبة الأكسجين في الغلاف الجوي؟", A: "21%", B: "10%", correct: "A"},
+        {q: "ما الطبقة الأقرب لسطح الأرض؟", A: "التروبوسفير", B: "الثيرموسفير", correct: "A"},
+        {q: "في أي طبقة تحدث الظواهر الجوية؟", A: "الميزوسفير", B: "التروبوسفير", correct: "B"},
+        {q: "ما الطبقة التي تحتوي على الأوزون؟", A: "الستراتوسفير", B: "التروبوسفير", correct: "A"},
+        {q: "ما الطبقة التي تحترق فيها الشهب؟", A: "الميزوسفير", B: "الستراتوسفير", correct: "A"},
+        {q: "ما الطبقة الأعلى حرارة؟", A: "الميزوسفير", B: "الثيرموسفير", correct: "B"},
+        {q: "ما الطبقة التي تنعكس فيها موجات الراديو؟", A: "التروبوسفير", B: "الأيونوسفير", correct: "B"},
+        {q: "ما سبب ارتفاع حرارة الستراتوسفير؟", A: "وجود الأوزون", B: "قربها من الأرض", correct: "A"},
+        {q: "كم عدد طبقات الأرض الرئيسية؟", A: "3 طبقات", B: "5 طبقات", correct: "A"},
+        {q: "ما الطبقة الخارجية الصلبة؟", A: "القشرة", B: "اللب الداخلي", correct: "A"},
+        {q: "ما الطبقة التي تقع تحت القشرة؟", A: "الوشاح", B: "اللب الخارجي", correct: "A"},
+        {q: "ما الطبقة السائلة؟", A: "القشرة", B: "اللب الخارجي", correct: "B"},
+        {q: "ما الطبقة الأكثر حرارة؟", A: "اللب الداخلي", B: "الوشاح", correct: "A"},
+        {q: "ما سبب حركة الصفائح؟", A: "الحرارة على الطبقات", B: "الضغط على الطبقات", correct: "B"},
+        {q: "طبقة السيال هي الطبقة؟", A: "القشرة القارية", B: "المحيطية", correct: "A"},
+        {q: "طبقة السيما هي الطبقة؟", A: "القارية", B: "المحيطية", correct: "B"},
+        {q: "ما الذي يميز القشرة القارية؟", A: "سميكة وخفيفة", B: "رقيقة وثقيلة", correct: "A"},
+        {q: "ما الذي يميز القشرة المحيطية؟", A: "سميكة وخفيفة", B: "رقيقة وثقيلة", correct: "B"},
+        {q: "ما الذي يحدد نوع النباتات؟", A: "المناخ", B: "حركة الرياح", correct: "A"},
+        {q: "ما الذي يحدد نوع الحيوانات؟", A: "توفر الغذاء", B: "شكل التضاريس", correct: "A"},
+        {q: "أين تقع الغابات الاستوائية؟", A: "بين 5 - 10", B: "بين 8 - 18", correct: "A"},
+        {q: "ما مناخ الغابات الاستوائية؟", A: "حار رطب", B: "بارد جاف", correct: "A"},
+        {q: "أين تقع الصحاري الحارة؟", A: "عند القطبين", B: "بين دائرتي عرض 15–30", correct: "B"},
+        {q: "ما مناخ التندرا؟", A: "شديد البرودة", B: "حار رطب", correct: "A"},
+        {q: "ما النباتات السائدة في السافانا؟", A: "الحشائش الطويلة", B: "الأشجار الكثيفة", correct: "A"},
+        {q: "ما الحيوانات المنتشرة في الغابات المعتدلة؟", A: "الدببة والغزلان", B: "الجمال", correct: "A"},
+        {q: "ما العوامل الداخلية؟", A: "قوى تنشأ من باطن الأرض", B: "قوى من الرياح", correct: "A"},
+        {q: "ما العوامل الخارجية؟", A: "قوى تنشأ من سطح الأرض", B: "قوى من باطن الأرض", correct: "A"},
+        {q: "من أمثلة العوامل الداخلية؟", A: "الزلازل", B: "التعرية", correct: "A"},
+        {q: "من أمثلة العوامل الخارجية؟", A: "البراكين", B: "التجوية", correct: "B"},
+        {q: "ما التجوية؟", A: "تفتيت الصخور", B: "نقل الصخور", correct: "A"},
+        {q: "ما التعرية؟", A: "تكوين الصخور", B: "نقل الفتات", correct: "B"},
+        {q: "ما الترسيب؟", A: "تراكم الفتات", B: "تفتيت الصخور", correct: "A"},
+        {q: "ما الذي يسبب التعرية؟", A: "الحرارة والجاذبية", B: "الرياح والمياه", correct: "B"},
+        {q: "ما الصخور النارية؟", A: "صخور تتكون من تبرد الصهارة", B: "صخور تتكون من ضغط الرمال", correct: "A"},
+        {q: "من أمثلة الصخور النارية؟", A: "الجرانيت", B: "الحجر الجيري", correct: "A"},
+        {q: "ما الصخور الرسوبية؟", A: "صخور تتكون من تراكم الفتات الصخري", B: "صخور تتكون من تبريد الصهارة", correct: "A"},
+        {q: "من أمثلة الصخور الرسوبية؟", A: "الحجر الرملي", B: "البازلت", correct: "A"},
+
+        // 121 - 180
+        {q: "ما الصخور المتحولة؟", A: "صخور تغيرت بفعل الحرارة والضغط", B: "صخور تكونت من الحمم", correct: "A"},
+        {q: "من أمثلة الصخور المتحولة؟", A: "الجرانيت", B: "الرخام", correct: "B"},
+        {q: "ما سبب تحول الصخور؟", A: "تعرضها للحرارة والضغط", B: "تعرضها للرياح والحرارة", correct: "A"},
+        {q: "ما الذي يميز الصخور الرسوبية؟", A: "عدم وجود طبقات", B: "وجود طبقات واضحة", correct: "B"},
+        {q: "ما الذي يميز الصخور النارية؟", A: "أنها صلبة ومتبلورة", B: "أنها رخوة وسهلة التفتيت", correct: "A"},
+        {q: "ما الذي يميز الصخور المتحولة؟", A: "بقاؤها كما هي", B: "تغير تركيبها الأصلي", correct: "B"},
+        {q: "ما الطقس؟", A: "حالة الجو في فترة قصيرة", B: "حالة الجو على مدى طويل", correct: "A"},
+        {q: "ما المناخ؟", A: "حالة الجو خلال يوم واحد", B: "حالة الجو على مدى طويل", correct: "B"},
+        {q: "ما الفرق بين الطقس والمناخ؟", A: "الطقس قصير المدى", B: "الطقس طويل المدى", correct: "A"},
+        {q: "أيهما يتغير بسرعة؟", A: "المناخ", B: "الطقس", correct: "B"},
+        {q: "ما العنصر الذي يقيسه الترمومتر؟", A: "درجة الحرارة", B: "الضغط الجوي", correct: "A"},
+        {q: "ما الجهاز الذي يقيس الضغط الجوي؟", A: "الهيجرومتر", B: "البارومتر", correct: "B"},
+        {q: "ما الجهاز الذي يقيس الرطوبة؟", A: "الهيجرومتر", B: "الأنيمومتر", correct: "A"},
+        {q: "ما الجهاز الذي يقيس سرعة الرياح؟", A: "البارومتر", B: "الأنيمومتر", correct: "B"},
+        {q: "ما الجهاز الذي يقيس درجة الحرارة؟", A: "الترمومتر", B: "السيكرومتر", correct: "A"},
+        {q: "ما العامل الذي يؤثر في درجة الحرارة؟", A: "الموقع الفلكي", B: "نوع الضغط", correct: "A"},
+        {q: "ما الذي يسبب اختلاف الضغط الجوي؟", A: "اختلاف الحرارة", B: "سرعة الرياح", correct: "A"},
+        {q: "ما الذي يحدد اتجاه الرياح؟", A: "ارتفاع الجبال وانخفاضها والحرارة", B: "مناطق الضغط المرتفع والمنخفض", correct: "B"},
+        {q: "ما الذي يحدد كمية الأمطار؟", A: "الرياح الرطبة", B: "الرياح الجافة", correct: "A"},
+        {q: "ما الذي يسبب الرطوبة؟", A: "تبخر الماء", B: "تبرد الماء", correct: "A"},
+        {q: "ما الزلزال؟", A: "اهتزاز مفاجئ لسطح الأرض", B: "انفجار في الارض وخروج الحمم", correct: "A"},
+        {q: "ما الجهاز الذي يقيس شدة الزلازل؟", A: "البارومتر", B: "السيزموجراف", correct: "B"},
+        {q: "ما سبب حدوث الزلازل؟", A: "حركة الصفائح", B: "التواء الطبقات", correct: "A"},
+        {q: "ما البركان؟", A: "فتحة في القشرة تخرج منها المواد المنصهرة", B: "هزات سريعة تشق الارض", correct: "A"},
+        {q: "ما البركان النشط؟", A: "بركان يثور من وقت لآخر", B: "بركان لا يمكن أن يثور", correct: "A"},
+        {q: "ما البركان الخامد؟", A: "بركان توقف عن الثوران منذ زمن طويل", B: "بركان يثور من فترة الى اخرى", correct: "A"},
+        {q: "ما البركان الهادئ؟", A: "بركان مستمر في الثوران يوما بعد يوم", B: "بركان لم يثر منذ مدة طويلة وقد يثور", correct: "B"},
+        {q: "في أي سنة تأسست الهيئة السعودية للحياة الفطرية؟", A: "1430هـ", B: "1406هـ", correct: "B"},
+        {q: "ما الهدف من إنشاء المحميات الطبيعية؟", A: "حماية النباتات والحيوانات", B: "حماية الغلاف الجوي والصخري", correct: "A"},
+        {q: "من أمثلة المحميات الطبيعية البحرية في المملكة؟", A: "محمية الجبيل", B: "محمية حرة الحرة", correct: "A"},
+        {q: "من المحميات الملكية في نيوم؟", A: "الملك عبد العزيز", B: "الأمير محمد بن سلمان", correct: "B"},
+        {q: "سبب تسمية الدولة الأموية", A: "نسبة إلى أمية بن عبد شمس", B: "نسبة إلى أمية بن عبد المطلب", correct: "A"},
+        {q: "سبب تسمية الدولة العباسية", A: "نسبة إلى العباس بن علي", B: "نسبة إلى العباس بن عبد المطلب", correct: "B"},
+        {q: "سبب تسمية الدولة العثمانية", A: "نسبة إلى عثمان بن أرطغرل", B: "نسبة إلى عثمان بن أورخان", correct: "A"},
+        {q: "في أي طبقة يوجد غاز الأوزون؟", A: "الستراتوسفير", B: "الميزوسفير", correct: "A"},
+        {q: "في أي طبقة يتم امتصاص الأشعة السينية؟", A: "التروبوسفير", B: "الثيرموسفير", correct: "B"},
+        {q: "من الذي كان خليفة للمسلمين قبل معاوية؟", A: "علي بن ابي طالب", B: "الحسين بن علي", correct: "A"},
+        {q: "من المؤسس الأول للدولة الأموية؟", A: "معاوية بن أبي سفيان", B: "يزيد بن معاوية", correct: "A"},
+        {q: "من المؤسس الثاني للدولة الأموية؟", A: "عبد الملك بن مروان", B: "الوليد بن عبد الملك", correct: "A"},
+        {q: "من المؤسس الحقيقي للدولة العباسية؟", A: "أبو جعفر المنصور", B: "أبو العباس السفاح", correct: "A"},
+        {q: "من المؤسس الحقيقي للدولة العثمانية؟", A: "عثمان بن أرطغرل", B: "محمد الفاتح", correct: "B"},
+        {q: "من الذي قام ببناء أسطول بحري في الدولة الأموية؟", A: "عبد الملك بن مروان", B: "معاوية بن أبي سفيان", correct: "B"},
+        {q: "من الذي قام ببناء الرواق العباسي؟", A: "محمد المهدي", B: "هارون الرشيد", correct: "A"},
+        {q: "من الذي قام ببناء بيت الحكمة؟", A: "أبو جعفر المنصور", B: "محمد المهدي", correct: "A"},
+        {q: "من الذي قضى على فتنة البرامكة؟", A: "هارون الرشيد", B: "أبو جعفر المنصور", correct: "A"},
+        {q: "من الذي فتح القسطنطينية؟", A: "محمد الفاتح", B: "سليم الأول", correct: "A"},
+        {q: "من الذي وصلت جيوشه إلى النمسا؟", A: "سليمان القانوني", B: "أورخان بن عثمان", correct: "A"},
+        {q: "من الذي هزم المغول؟", A: "سيف الدين قطز", B: "صلاح الدين الأيوبي", correct: "A"},
+        {q: "من الذي دمر بغداد؟", A: "جنكيز خان", B: "هولاكو", correct: "B"},
+        {q: "من الذي طرد الروم من شمال أفريقيا؟", A: "حسان بن النعمان", B: "عقبة بن نافع", correct: "A"},
+        {q: "من قاد الأتراك هربا من الزحف المغولي؟", A: "أرطغرل", B: "عثمان بن أرطغرل", correct: "A"},
+        {q: "من الذي أسس الفرقة الإنكشارية؟", A: "محمد الفاتح", B: "أورخان بن عثمان", correct: "B"},
+        {q: "من الذي استولى على البلاد العربية؟", A: "سليم الأول", B: "سليمان القانوني", correct: "A"},
+        {q: "ما اسم المدينة التي دمرها العثمانيون في الجزيرة العربية؟", A: "الدرعية", B: "المدينة المنورة", correct: "A"},
+        {q: "ما اسم حملة تهجير سكان المدينة المنورة؟", A: "هجر برلك", B: "سفربرلك", correct: "B"},
+        {q: "كم عدد الولايات التي قسم العثمانيون فيها البلاد العربية؟", A: "10 ولايات", B: "15 ولاية", correct: "B"},
+        {q: "ما اسم الدولة الإسلامية التي أسقطتها الدولة العثمانية؟", A: "الدولة المملوكية", B: "الدولة الأيوبية", correct: "A"},
+        {q: "كم عدد الإمارات التي كونها الصليبيون في الحملة الأولى؟", A: "أربع إمارات", B: "إمارتان", correct: "A"},
+        {q: "من الذي استعاد إمارة الرها من الصليبيين؟", A: "عماد الدين زنكي", B: "صلاح الدين الأيوبي", correct: "A"},
+        {q: "من نباتات الإقليم الاستوائي؟", A: "الكاكاو", B: "الفلين", correct: "A"},
+
+        // 181 - 192
+        {q: "يقع الإقليم الاستوائي بين دوائر عرض:", A: "5 إلى 10", B: "8 إلى 18", correct: "A"},
+        {q: "من نباتات الإقليم الموسمي:", A: "الصنوبر", B: "الخيزران", correct: "B"},
+        {q: "يقع الإقليم الموسمي بين دوائر عرض:", A: "18 إلى 30", B: "8 إلى 18", correct: "B"},
+        {q: "من نبات الإقليم الصحراوي الحار:", A: "الطلح", B: "الزيتون", correct: "A"},
+        {q: "يقع الإقليم الصحراوي الحار بين دوائر عرض:", A: "10 إلى 20", B: "18 إلى 30", correct: "B"},
+        {q: "من حيوانات الإقليم الاستوائي:", A: "التماسيح", B: "الجمل", correct: "A"},
+        {q: "يقع إقليم البحر المتوسط بين دوائر عرض:", A: "40 إلى 60", B: "30 إلى 40", correct: "B"},
+        {q: "من حيوانات الإقليم المعتدل البارد:", A: "الفيل", B: "الرنة", correct: "B"},
+        {q: "من حيوانات الإقليم الموسمي:", A: "الزرافة", B: "البطريق", correct: "A"},
+        {q: "مناخ الإقليم الاستوائي:", A: "حار ممطر طول العام", B: "حار صيفًا دافئ شتاء", correct: "A"},
+        {q: "مناخ الإقليم الموسمي:", A: "حار ممطر حسب الفصول", B: "حار ممطر طوال العام", correct: "A"},
+        {q: "مناخ إقليم البحر المتوسط:", A: "أكثر مطرًا في الشتاء", B: "أكثر مطرًا في الصيف", correct: "A"}
+    ];
+
+    let cellToQuestionIndex = [];
+    let teamAScore = 0;
+    let teamBScore = 0;
+    let teamAQuestions = 0;
+    let teamBQuestions = 0;
+    let currentTeam = "A";
+    let gamePaused = false;
+    let gameFinished = false;
+
+    const gridEl = document.getElementById("grid");
+    const teamACard = document.getElementById("teamA-card");
+    const teamBCard = document.getElementById("teamB-card");
+    const teamAScoreEl = document.getElementById("teamA-score");
+    const teamBScoreEl = document.getElementById("teamB-score");
+    const winnerBannerEl = document.getElementById("winner-banner");
+    const shuffleBtn = document.getElementById("shuffle-btn");
+    const saveBtn = document.getElementById("save-btn");
+    const resumeBtn = document.getElementById("resume-btn");
+    const mainContainer = document.getElementById("main-container");
+
+    const overlayEl = document.getElementById("question-overlay");
+    const questionTextEl = document.getElementById("question-text");
+    const questionOptionsEl = document.getElementById("question-options");
+    const modalFeedbackEl = document.getElementById("modal-feedback");
+
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function initMapping() {
+        cellToQuestionIndex = [];
+        for (let i = 0; i < allQuestions.length; i++) {
+            cellToQuestionIndex.push(i);
+        }
+        shuffleArray(cellToQuestionIndex);
+    }
+
+    function createGrid() {
+        gridEl.innerHTML = "";
+        for (let i = 0; i < 192; i++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.dataset.index = i.toString();
+            cell.textContent = (i + 1).toString();
+            cell.addEventListener("click", onCellClick);
+            gridEl.appendChild(cell);
+        }
+    }
+
+    function updateTurnHighlight() {
+        if (currentTeam === "A") {
+            teamACard.classList.add("current-turn");
+            teamBCard.classList.remove("current-turn");
+        } else {
+            teamBCard.classList.add("current-turn");
+            teamACard.classList.remove("current-turn");
+        }
+    }
+
+    function showOverlayQuestion(question) {
+        questionTextEl.textContent = question.q;
+        questionOptionsEl.innerHTML = "";
+        modalFeedbackEl.textContent = "";
+        modalFeedbackEl.className = "modal-feedback";
+
+        const btnA = document.createElement("button");
+        btnA.className = "option-btn";
+        btnA.textContent = "أ) " + question.A;
+
+        const btnB = document.createElement("button");
+        btnB.className = "option-btn";
+        btnB.textContent = "ب) " + question.B;
+
+        questionOptionsEl.appendChild(btnA);
+        questionOptionsEl.appendChild(btnB);
+
+        overlayEl.classList.add("visible");
+
+        return { btnA, btnB };
+    }
+
+    function hideOverlay() {
+        overlayEl.classList.remove("visible");
+        questionTextEl.textContent = "";
+        questionOptionsEl.innerHTML = "";
+        modalFeedbackEl.textContent = "";
+        modalFeedbackEl.className = "modal-feedback";
+    }
+
+    function onCellClick(e) {
+        if (gamePaused || gameFinished) return;
+        const cell = e.currentTarget;
+        if (cell.classList.contains("disabled")) return;
+
+        const cellIndex = parseInt(cell.dataset.index, 10);
+        const qIndex = cellToQuestionIndex[cellIndex];
+        const question = allQuestions[qIndex];
+
+        const { btnA, btnB } = showOverlayQuestion(question);
+
+        btnA.addEventListener("click", () =>
+            handleAnswer("A", btnA, btnB, question, cellIndex)
+        );
+        btnB.addEventListener("click", () =>
+            handleAnswer("B", btnA, btnB, question, cellIndex)
+        );
+    }
+
+    function handleAnswer(choice, btnA, btnB, question, cellIndex) {
+        if (gamePaused || gameFinished) return;
+
+        const isCorrect = (choice === question.correct);
+
+        if (question.correct === "A") {
+            btnA.classList.add("correct");
+            if (choice === "B") btnB.classList.add("wrong");
+        } else {
+            btnB.classList.add("correct");
+            if (choice === "A") btnA.classList.add("wrong");
+        }
+        btnA.disabled = true;
+        btnB.disabled = true;
+
+        if (currentTeam === "A") {
+            teamAQuestions++;
+            if (isCorrect) {
+                teamAScore++;
+                teamAScoreEl.textContent = teamAScore;
+            }
+        } else {
+            teamBQuestions++;
+            if (isCorrect) {
+                teamBScore++;
+                teamBScoreEl.textContent = teamBScore;
+            }
+        }
+
+        if (isCorrect) {
+            modalFeedbackEl.textContent = "إجابة صحيحة";
+            modalFeedbackEl.className = "modal-feedback correct";
+        } else {
+            modalFeedbackEl.textContent = "إجابة خاطئة";
+            modalFeedbackEl.className = "modal-feedback wrong";
+        }
+
+        const cell = gridEl.querySelector(`.cell[data-index='${cellIndex}']`);
+        if (cell) {
+            cell.classList.add("disabled");
+            const markSpan = document.createElement("span");
+            markSpan.className = "mark";
+            markSpan.textContent = isCorrect ? "✓" : "✗";
+            if (currentTeam === "A") {
+                cell.classList.add("team-blue");
+            } else {
+                cell.classList.add("team-green");
+            }
+            cell.textContent = "";
+            cell.appendChild(markSpan);
+        }
+
+        checkWinner();
+
+        if (!gameFinished) {
+            setTimeout(() => {
+                hideOverlay();
+                currentTeam = (currentTeam === "A") ? "B" : "A";
+                updateTurnHighlight();
+            }, 900);
+        } else {
+            setTimeout(() => hideOverlay(), 900);
+        }
+    }
+
+    function checkWinner() {
+        if (teamAScore >= 10 || teamBScore >= 10) {
+            if (teamAQuestions === teamBQuestions) {
+                if (teamAScore > teamBScore) {
+                    declareWinner("الفريق الأزرق");
+                } else if (teamBScore > teamAScore) {
+                    declareWinner("الفريق الأخضر");
+                }
+            }
+        }
+    }
+
+    function declareWinner(teamName) {
+        gameFinished = true;
+        winnerBannerEl.textContent = "الفائز: " + teamName;
+        mainContainer.classList.add("disabled-all");
+    }
+
+    function resetGame(shuffleQuestions = true) {
+        teamAScore = 0;
+        teamBScore = 0;
+        teamAQuestions = 0;
+        teamBQuestions = 0;
+        currentTeam = "A";
+        gamePaused = false;
+        gameFinished = false;
+        winnerBannerEl.textContent = "";
+        mainContainer.classList.remove("disabled-all");
+        hideOverlay();
+
+        teamAScoreEl.textContent = "0";
+        teamBScoreEl.textContent = "0";
+        updateTurnHighlight();
+
+        if (shuffleQuestions) {
+            initMapping();
+        }
+        createGrid();
+    }
+
+    function saveGameState() {
+        const cells = Array.from(gridEl.querySelectorAll(".cell")).map(cell => {
+            return {
+                index: parseInt(cell.dataset.index, 10),
+                disabled: cell.classList.contains("disabled"),
+                teamBlue: cell.classList.contains("team-blue"),
+                teamGreen: cell.classList.contains("team-green"),
+                mark: cell.textContent.trim()
+            };
+        });
+
+        const state = {
+            cellToQuestionIndex,
+            teamAScore,
+            teamBScore,
+            teamAQuestions,
+            teamBQuestions,
+            currentTeam,
+            cells,
+            gameFinished
+        };
+
+        localStorage.setItem("teamsQuizState", JSON.stringify(state));
+        gamePaused = true;
+        mainContainer.classList.add("disabled-all");
+        hideOverlay();
+    }
+
+    function loadGameState() {
+        const stateStr = localStorage.getItem("teamsQuizState");
+        if (!stateStr) {
+            winnerBannerEl.textContent = "لا توجد مسابقة محفوظة.";
+            return;
+        }
+        const state = JSON.parse(stateStr);
+
+        cellToQuestionIndex = state.cellToQuestionIndex || [];
+        teamAScore = state.teamAScore || 0;
+        teamBScore = state.teamBScore || 0;
+        teamAQuestions = state.teamAQuestions || 0;
+        teamBQuestions = state.teamBQuestions || 0;
+        currentTeam = state.currentTeam || "A";
+        gameFinished = state.gameFinished || false;
+
+        teamAScoreEl.textContent = teamAScore;
+        teamBScoreEl.textContent = teamBScore;
+
+        createGrid();
+
+        if (Array.isArray(state.cells)) {
+            state.cells.forEach(cellState => {
+                const cell = gridEl.querySelector(`.cell[data-index='${cellState.index}']`);
+                if (cell) {
+                    cell.className = "cell";
+                    if (cellState.disabled) cell.classList.add("disabled");
+                    if (cellState.teamBlue) cell.classList.add("team-blue");
+                    if (cellState.teamGreen) cell.classList.add("team-green");
+                    if (cellState.mark) {
+                        cell.textContent = "";
+                        const markSpan = document.createElement("span");
+                        markSpan.className = "mark";
+                        markSpan.textContent = cellState.mark;
+                        cell.appendChild(markSpan);
+                    } else {
+                        cell.textContent = (cellState.index + 1).toString();
+                    }
+                }
+            });
+        }
+
+        if (gameFinished) {
+            mainContainer.classList.add("disabled-all");
+        } else {
+            mainContainer.classList.remove("disabled-all");
+        }
+        updateTurnHighlight();
+        hideOverlay();
+    }
+
+    shuffleBtn.addEventListener("click", () => {
+        resetGame(true);
+    });
+
+    saveBtn.addEventListener("click", () => {
+        saveGameState();
+    });
+
+    resumeBtn.addEventListener("click", () => {
+        loadGameState();
+    });
+
+    resetGame(true);
+</script>
+
+</body>
+</html>
